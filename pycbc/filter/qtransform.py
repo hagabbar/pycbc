@@ -64,7 +64,7 @@ def inspiral_qtransform_generator(segments, sampling=None):
         q_base, q_frange, q_data = inspiral_tiling(stilde, sampling)
 
         # getting q-plane for segment
-        q_plane, interp, qs_time, qe_time = qplane(q_base, q_data, q_frange, fres=None, seg=stilde, sampling)
+        q_plane, interp, qs_time, qe_time = qplane(q_base, q_data, q_frange, sampling, fres=None, seg=stilde)
         
         del q_frange, q_data, interp
 
