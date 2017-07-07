@@ -75,6 +75,8 @@ parser.add_argument("--max-template-length", type=float,
 parser.add_argument("--enable-q-transform", action='store_true',
                   help="compute the q-transform for each segment of a "
                        "given analysis run. (default = False)")
+parser.add_argument("--q-sampling", type=float,
+                  help="Desired sampling frequency for q-transform.")
 # add approximant arg
 pycbc.waveform.bank.add_approximant_arg(parser)
 parser.add_argument("--order", type=int,
@@ -242,8 +244,12 @@ with ctx:
         sys.exit(0)
 
     if opt.enable_q_transform:
-        logging.info("Performing q-transform on analysis segments")
-        q_trans = qtransform.inspiral_qtransform_generator(segments)
+        if opt.q_sampling:
+            logging.info("Performing q-transform on analysis segments")
+            q_trans = qtransform.inspiral_qtransform_generator(segments, opt.q_sampling)
+        else:
+            logging.info("Performing q-transform on analysis segments")
+            q_trans = qtransform.inspiral_qtransform_generator(segments)
 
     else:
         q_trans = {}

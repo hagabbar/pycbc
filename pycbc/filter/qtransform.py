@@ -43,7 +43,7 @@ from pycbc.types import zeros
 from numpy import fft as npfft
 import os
 
-def inspiral_qtransform_generator(segments):
+def inspiral_qtransform_generator(segments, sampling=None):
     """Main function for pycbc_inspiral implementation of qtransform.py
     Parameters
     ----------
@@ -61,10 +61,10 @@ def inspiral_qtransform_generator(segments):
     for s_num, stilde in enumerate(segments):
         # getting q-tiles for segments
         del s_num
-        q_base, q_frange, q_data = inspiral_tiling(stilde)
+        q_base, q_frange, q_data = inspiral_tiling(stilde, sampling)
 
         # getting q-plane for segment
-        q_plane, interp, qs_time, qe_time = qplane(q_base, q_data, q_frange, fres=None, seg=stilde)
+        q_plane, interp, qs_time, qe_time = qplane(q_base, q_data, q_frange, fres=None, seg=stilde, sampling)
         
         del q_frange, q_data, interp
 
@@ -83,7 +83,7 @@ def inspiral_qtransform_generator(segments):
 
     return comb_q_dict
 
-def inspiral_tiling(seg, frange=(0,np.inf), qrange=(4,64), mismatch=0.2):
+def inspiral_tiling(seg, sampling=None, frange=(0,np.inf), qrange=(4,64), mismatch=0.2):
     """Pycbc inspiral iterable constructor of QTile tuples
     Parameters
     ----------
@@ -113,7 +113,7 @@ def inspiral_tiling(seg, frange=(0,np.inf), qrange=(4,64), mismatch=0.2):
     data = white_strain
  
     # perform Q-tiling
-    q_base, frange = qtiling(data, qrange, frange, mismatch)
+    q_base, frange = qtiling(data, qrange, frange, mismatch, sampling)
 
     return q_base, frange, data
 
@@ -171,7 +171,7 @@ def plotter(interp, out_dir, now, frange, tres, fres):
 
     return plt
 
-def qplane(qplane_tile_dict, fseries, frange, normalized=True, tres=1., fres=1., seg=None):
+def qplane(qplane_tile_dict, fseries, frange, normalized=True, tres=1., fres=1., seg=None, sampling=None):
     """Performs q-transform on each tile for each q-plane and selects
        tile with the maximum normalized energy. Q-transform can then
        be interpolated to a desired frequency and time resolution.
@@ -204,7 +204,10 @@ def qplane(qplane_tile_dict, fseries, frange, normalized=True, tres=1., fres=1.,
     dur = fseries.duration
 
     # check for sampling rate
-    sampling = fseries.sample_rate
+    if sampling:
+        sampling=sampling
+    else:
+        sampling = fseries.sample_rate
 
     max_energy = []
     for i, key in enumerate(qplane_tile_dict):
@@ -266,7 +269,7 @@ def qplane(qplane_tile_dict, fseries, frange, normalized=True, tres=1., fres=1.,
 
     return out, interp
 
-def qtiling(fseries, qrange, frange, mismatch=0.2):
+def qtiling(fseries, qrange, frange, mismatch=0.2, sampling=None):
     """Iterable constructor of QTile tuples
 
     Parameters
@@ -279,6 +282,8 @@ def qtiling(fseries, qrange, frange, mismatch=0.2):
         upper and lower bounds of frequency range
     mismatch:
         percentage of desired fractional mismatch
+    sampling:
+        desired sampling rate
 
     Returns
     -------
@@ -295,7 +300,10 @@ def qtiling(fseries, qrange, frange, mismatch=0.2):
     qplane_tile_dict = {}
 
     # check for sampling rate
-    sampling = fseries.sample_rate
+    if sampling:
+        sampling=sampling
+    else:
+        sampling = fseries.sample_rate
 
     qs = list(_iter_qs(qrange, deltam))
     if frange[0] == 0:  # set non-zero lower frequency
